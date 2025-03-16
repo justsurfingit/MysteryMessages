@@ -6,16 +6,14 @@ import { Switch } from "@/components/ui/switch";
 import { acceptMessageSchema } from "@/schema/acceptMessageSchema";
 import { ApiResponse } from "@/types/ApiResponse";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Description } from "@radix-ui/react-alert-dialog";
 import axios, { AxiosError } from "axios";
-import { Loader2, RefreshCcw, SeparatorHorizontal } from "lucide-react";
+import { Loader2, RefreshCcw } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/router";
 import React, { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
-const page = () => {
+const Page = () => {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
@@ -101,10 +99,11 @@ const page = () => {
     return <div></div>;
   }
   //   fetch the url for the user
+  const { username } = session.user;
   const baseUrl = `${window.location.protocol}//${window.location.host}`;
-  const profileUrl = `${baseUrl}/u/${session.user.username}`;
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(profileUrl);
+  const profileUrl = `${baseUrl}/u/${username}`;
+  const copyToClipboard = async () => {
+    await navigator.clipboard?.writeText(profileUrl);
     toast("Link copied to the clipboard", {
       description: "Visit the Link to send anonymous Messages.",
     });
@@ -168,4 +167,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;
