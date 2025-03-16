@@ -1,5 +1,3 @@
-// route for deleting the message
-
 import dbConnect from "@/lib/dbConnect";
 import userModel from "@/model/User";
 import { NextOptions } from "../../auth/[...nextauth]/options";
@@ -7,22 +5,24 @@ import { getServerSession } from "next-auth";
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { messageid: string } }
+  { params }: { params: Promise<{ messageid: string }> }
 ) {
-  const messageId = params.messageid;
+  const { messageid: messageId } = await params; // <-- Await params here
+
   const session = await getServerSession(NextOptions);
 
-  if (!session || !session?.user) {
+  if (!session || !session.user) {
     return Response.json(
       {
         success: false,
         message: "Not Authorized. Please Login.",
       },
       {
-        status: 404,
+        status: 401, // Use 401 for unauthorized instead of 404
       }
     );
   }
+
   const sessionUser = session.user;
 
   if (!messageId) {
@@ -32,13 +32,14 @@ export async function DELETE(
         message: "MessageID is a required parameter",
       },
       {
-        status: 404,
+        status: 400, // Use 400 for bad request instead of 404
       }
     );
   }
 
   try {
     await dbConnect();
+
     const updateResult = await userModel.updateOne(
       { _id: sessionUser.id },
       { $pull: { messages: { _id: messageId } } }
@@ -52,11 +53,11 @@ export async function DELETE(
     }
 
     return Response.json(
-      { message: "Message deleted Successfully", success: true },
+      { message: "Message deleted successfully", success: true },
       { status: 200 }
     );
   } catch (err) {
-    console.log("Error deleting message,", err);
+    console.error("Error deleting message:", err);
     return Response.json(
       { message: "Error deleting message", success: false },
       { status: 500 }
